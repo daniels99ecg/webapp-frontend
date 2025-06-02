@@ -44,15 +44,26 @@ useEffect(() => {
       } else if (user.userType === "homeowner") {
         url = `https://webapp-backend-tvrm.onrender.com/api/homeowner/allhome?user_id=${user.user_id}`;
       } else {
-        throw new Error("Tipo de usuario no válido");
+        console.error("Tipo de usuario no válido");
+        return;
       }
 
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch projects");
+
       const data = await response.json();
+
+      // Si la respuesta es un array vacío, no mostrar alerta
+      if (Array.isArray(data) && data.length === 0) {
+        console.log("No projects found");
+        setProjects([]);
+        return;
+      }
+
       setProjects(data);
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching projects:", error);
+      // Aquí solo mostramos alerta si es un error real (no solo una lista vacía)
       alert("Error loading projects");
     }
   };
@@ -60,7 +71,6 @@ useEffect(() => {
   fetchProjects();
 }, []);
 
- 
 
   const handleAddProject = () => {
     setSelectedProject([]);
@@ -191,41 +201,50 @@ useEffect(() => {
       </DialogActions>
     </Dialog>
 
-      <Box mt={4} width="100%" maxWidth="600px">
-      <Typography variant="h5" align="center">
-        Registered Projects
-      </Typography>
-      {projects.map((p) => (
-        <Card key={p.id} sx={{ mt: 2 }}>
-          <CardContent>
-            <Typography>
-              <strong>ID:</strong> {p.id}
-            </Typography>
-            <Typography>
-              <strong>Name:</strong> {Array.isArray(p.names) ? p.names.join(", ") : p.name}
-            </Typography>
-            <Typography>
-              <strong>Added to Bid:</strong> {p.add_to_bid ? "Yes" : "No"}
-            </Typography>
-            {p.add_to_bid && (
-              <>
-                <Typography>
-                  <strong>Start Date:</strong>{" "}
-                  {new Date(p.start_date).toLocaleDateString("en-US")}
-                </Typography>
-                <Typography>
-                  <strong>End Date:</strong>{" "}
-                  {new Date(p.end_date).toLocaleDateString("en-US")}
-                </Typography>
-                <Typography>
-                  <strong>Cost:</strong> ${p.costs}
-                </Typography>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      ))}
-    </Box>
+    <Box mt={4} width="100%" maxWidth="600px">
+  <Typography variant="h5" align="center">
+    Registered Projects
+  </Typography>
+
+  {projects.length === 0 ? (
+    <Typography align="center" mt={2}>
+      No projects found.
+    </Typography>
+  ) : (
+    projects.map((p) => (
+      <Card key={p.id} sx={{ mt: 2 }}>
+        <CardContent>
+          <Typography>
+            <strong>ID:</strong> {p.id}
+          </Typography>
+          <Typography>
+            <strong>Name:</strong>{" "}
+            {Array.isArray(p.names) ? p.names.join(", ") : p.name}
+          </Typography>
+          <Typography>
+            <strong>Added to Bid:</strong> {p.add_to_bid ? "Yes" : "No"}
+          </Typography>
+          {p.add_to_bid && (
+            <>
+              <Typography>
+                <strong>Start Date:</strong>{" "}
+                {new Date(p.start_date).toLocaleDateString("en-US")}
+              </Typography>
+              <Typography>
+                <strong>End Date:</strong>{" "}
+                {new Date(p.end_date).toLocaleDateString("en-US")}
+              </Typography>
+              <Typography>
+                <strong>Cost:</strong> ${p.costs}
+              </Typography>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    ))
+  )}
+</Box>
+
   </Box>
 </>
 
