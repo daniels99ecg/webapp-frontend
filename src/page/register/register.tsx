@@ -1,5 +1,5 @@
 
-import { Button, Stack, Typography, Container, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Box } from '@mui/material';
+import { Button, Stack, Typography, Container, Dialog, DialogContent, DialogTitle, IconButton, Box } from '@mui/material';
 
 import { useState } from 'react';
 import RegisterHomeowner from './RegisterHomeowner';

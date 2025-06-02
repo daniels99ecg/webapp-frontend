@@ -40,9 +40,9 @@ useEffect(() => {
       let url = "";
 
       if (user.userType === "serviceprovider") {
-        url = `http://localhost:3000/api/homeowner/list`;
+        url = `https://webapp-backend-tvrm.onrender.com/api/homeowner/list`;
       } else if (user.userType === "homeowner") {
-        url = `http://localhost:3000/api/homeowner/allhome?user_id=${user.user_id}`;
+        url = `https://webapp-backend-tvrm.onrender.com/api/homeowner/allhome?user_id=${user.user_id}`;
       } else {
         throw new Error("Tipo de usuario no válido");
       }
@@ -80,7 +80,7 @@ useEffect(() => {
   };
 
   try {
-    const response = await fetch("http://localhost:3000/api/homeowner/register", {
+    const response = await fetch("https://webapp-backend-tvrm.onrender.com/api/homeowner/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

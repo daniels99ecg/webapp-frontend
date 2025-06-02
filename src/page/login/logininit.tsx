@@ -4,7 +4,6 @@ import {
   Button,
   Typography,
   Stack,
-  FormHelperText,
   FormControl,
 } from '@mui/material';
 import { useState } from 'react';
@@ -52,7 +51,7 @@ export default function LoginInit() {
     }
 
     try {
-      const res = await fetch('http://localhost:3000/api/homeowner/login', {
+      const res = await fetch('https://webapp-backend-tvrm.onrender.com/api/homeowner/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),

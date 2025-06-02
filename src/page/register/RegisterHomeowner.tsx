@@ -115,7 +115,7 @@ export default function RegisterHomeowner() {
   const handleSubmit = async () => {
     if (!validate()) return;
     try {
-      const res = await fetch("http://localhost:3000/api/homeowner", {
+      const res = await fetch("https://webapp-backend-tvrm.onrender.com/api/homeowner", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -170,7 +170,7 @@ export default function RegisterHomeowner() {
   </Typography>
   <Grid container spacing={2}>
     {/* First row fields (two columns) */}
-    <Grid item xs={12} sm={6}>
+    <Grid >
       <TextField
         name="firstname"
         label="First Name"
@@ -181,7 +181,7 @@ export default function RegisterHomeowner() {
         helperText={errors.firstname}
       />
     </Grid>
-    <Grid item xs={12} sm={6}>
+    <Grid >
       <TextField
         name="lastname"
         label="Last Name"
@@ -194,7 +194,7 @@ export default function RegisterHomeowner() {
     </Grid>
 
     {/* Second row fields (two columns) */}
-    <Grid item xs={12} sm={6}>
+    <Grid >
       <TextField
         name="email"
         label="Email"
@@ -205,7 +205,7 @@ export default function RegisterHomeowner() {
         helperText={errors.email}
       />
     </Grid>
-    <Grid item xs={12} sm={6}>
+    <Grid >
       <TextField
         name="phonenumber"
         label="Phone Number"
@@ -218,7 +218,7 @@ export default function RegisterHomeowner() {
     </Grid>
 
     {/* Third row fields (two columns) */}
-    <Grid item xs={12} sm={6}>
+    <Grid >
       <TextField
         name="password"
         label="Password"
@@ -230,7 +230,7 @@ export default function RegisterHomeowner() {
         helperText={errors.password}
       />
     </Grid>
-    <Grid item xs={12} sm={6}>
+    <Grid >
       <TextField
         name="countrycode"
         label="Country Code"
@@ -243,7 +243,7 @@ export default function RegisterHomeowner() {
     </Grid>
 
     {/* Fourth row fields (two columns) */}
-    <Grid item xs={12} sm={6}>
+    <Grid >
       <TextField
         name="country"
         label="Country"
@@ -254,7 +254,7 @@ export default function RegisterHomeowner() {
         helperText={errors.country}
       />
     </Grid>
-    <Grid item xs={12} sm={6}>
+    <Grid >
       <TextField
         name="address"
         label="Address"
@@ -267,7 +267,7 @@ export default function RegisterHomeowner() {
     </Grid>
 
     {/* Fifth row fields (two columns) */}
-    <Grid item xs={12} sm={6}>
+    <Grid >
       <TextField
         name="state"
         label="State"
@@ -278,7 +278,7 @@ export default function RegisterHomeowner() {
         helperText={errors.state}
       />
     </Grid>
-    <Grid item xs={12} sm={6}>
+    <Grid >
       <TextField
         name="zcode"
         label="Postal Code"
@@ -303,7 +303,7 @@ export default function RegisterHomeowner() {
     />
 
     {/* Submit button row */}
-    <Grid item xs={12}>
+    <Grid>
       <Stack direction="row" justifyContent="center">
         <Button
           variant="contained"
