@@ -40,11 +40,11 @@ useEffect(() => {
       let url = "";
 
       if (user.userType === "serviceprovider") {
-        url = `https://webapp-backend-tvrm.onrender.com/api/homeowner/list`;
+        url = `${import.meta.env.VITE_API_URL}/api/homeowner/list`;
       } else if (user.userType === "homeowner") {
-        url = `https://webapp-backend-tvrm.onrender.com/api/homeowner/allhome?user_id=${user.user_id}`;
+        url = `${import.meta.env.VITE_API_URL}/api/homeowner/allhome?user_id=${user.user_id}`;
       } else {
-        console.error("Tipo de usuario no válido");
+        console.error("Invalid user type");
         return;
       }
 
@@ -90,7 +90,7 @@ useEffect(() => {
   };
 
   try {
-    const response = await fetch("https://webapp-backend-tvrm.onrender.com/api/homeowner/register", {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/homeowner/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -129,7 +129,7 @@ useEffect(() => {
     }}
   >
     <Button variant="contained" color="primary" onClick={handleAddProject}>
-      Add Project
+      New Bidding Event
     </Button>
 
     {/* Dialog para agregar proyecto */}
@@ -214,9 +214,6 @@ useEffect(() => {
     projects.map((p) => (
       <Card key={p.id} sx={{ mt: 2 }}>
         <CardContent>
-          <Typography>
-            <strong>ID:</strong> {p.id}
-          </Typography>
           <Typography>
             <strong>Name:</strong>{" "}
             {Array.isArray(p.names) ? p.names.join(", ") : p.name}

@@ -1,8 +1,9 @@
-import { TextField, Button, Container, Typography } from "@mui/material";
+import { TextField, Button, Container, Typography, MenuItem, Autocomplete, InputAdornment, IconButton } from "@mui/material";
 import Grid from "@mui/material/Grid";
 
 import { useState } from "react";
 import Swal from "sweetalert2";
+import {  Visibility, VisibilityOff } from "@mui/icons-material";
 
 export default function RegisterServiceProvider() {
   const [formData, setFormData] = useState({
@@ -11,72 +12,74 @@ export default function RegisterServiceProvider() {
     companyname: "",
     experience: "",
     phonenumber: "",
-    countrycode: "",
+    city: "",
     address: "",
     state: "",
     zcode: "",
     servicetype: "",
     licensed: "",
     insuranced: "",
-    userid: "",
+    email: "",
+    passwords: "",
   });
+    const [showPassword, setShowPassword] = useState(false);
+const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const validateField = (name: string, value: string) => {
-    let errorMsg = "";
-    switch (name) {
-      case "firstname":
-        if (!value.trim()) errorMsg = "Nombre requerido";
-        break;
-      case "lastname":
-        if (!value.trim()) errorMsg = "Apellido requerido";
-        break;
-      case "companyname":
-        if (!value.trim()) errorMsg = "Nombre de la empresa requerido";
-        break;
-      case "experience":
-        if (!value.trim()) errorMsg = "Experiencia requerida";
-        else if (isNaN(Number(value)) || Number(value) < 0)
-          errorMsg = "Debe ser un número positivo";
-        break;
-      case "phonenumber":
-        if (!value.trim()) errorMsg = "Teléfono requerido";
-        else if (value.length < 7) errorMsg = "Teléfono inválido";
-        break;
-      case "countrycode":
-        if (!value.trim()) errorMsg = "Código país requerido";
-        break;
-      case "address":
-        if (!value.trim()) errorMsg = "Dirección requerida";
-        break;
-      case "state":
-        if (!value.trim()) errorMsg = "Departamento/Estado requerido";
-        break;
-      case "zcode":
-        if (!value.trim()) errorMsg = "Código postal requerido";
-        else if (!/^\d+$/.test(value)) errorMsg = "Solo números";
-        break;
-      case "servicetype":
-        if (!value.trim()) errorMsg = "Tipo de servicio requerido";
-        break;
-      case "licensed":
-        if (!value.trim()) errorMsg = "Debe indicar si tiene licencia (sí/no)";
-        else if (!["sí", "no", "si", "no"].includes(value.toLowerCase()))
-          errorMsg = 'Debe ser "sí" o "no"';
-        break;
-      case "insuranced":
-        if (!value.trim()) errorMsg = "Debe indicar si tiene seguro (sí/no)";
-        else if (!["sí", "no", "si", "no"].includes(value.toLowerCase()))
-          errorMsg = 'Debe ser "sí" o "no"';
-        break;
-      case "userid":
-        if (value.trim() && isNaN(Number(value)))
-          errorMsg = "Debe ser un número";
-        break;
-    }
-    return errorMsg;
-  };
+const validateField = (name: string, value: string) => {
+  let errorMsg = "";
+  switch (name) {
+    case "firstname":
+      if (!value.trim()) errorMsg = "First name is required";
+      break;
+    case "lastname":
+      if (!value.trim()) errorMsg = "Last name is required";
+      break;
+    case "companyname":
+      if (!value.trim()) errorMsg = "Company name is required";
+      break;
+    case "experience":
+      if (!value.trim()) errorMsg = "Experience is required";
+      else if (isNaN(Number(value)) || Number(value) < 0)
+        errorMsg = "Must be a positive number";
+      break;
+    case "phonenumber":
+      if (!value.trim()) errorMsg = "Phone number is required";
+      else if (value.length < 7) errorMsg = "Invalid phone number";
+      break;
+    case "countrycode":
+      if (!value.trim()) errorMsg = "Country code is required";
+      break;
+    case "address":
+      if (!value.trim()) errorMsg = "Address is required";
+      break;
+    case "state":
+      if (!value.trim()) errorMsg = "State is required";
+      break;
+    case "zcode":
+      if (!value.trim()) errorMsg = "Postal code is required";
+      else if (!/^\d+$/.test(value)) errorMsg = "Numbers only";
+      break;
+    case "servicetype":
+      if (!value.trim()) errorMsg = "Service type is required";
+      break;
+    case "licensed":
+      if (!value.trim()) errorMsg = "Please indicate if you are licensed (yes/no)";
+      else if (!["yes", "no"].includes(value.toLowerCase()))
+        errorMsg = 'Must be "yes" or "no"';
+      break;
+    case "insuranced":
+      if (!value.trim()) errorMsg = "Please indicate if you are insured (yes/no)";
+      else if (!["yes", "no"].includes(value.toLowerCase()))
+        errorMsg = 'Must be "yes" or "no"';
+      break;
+  }
+  return errorMsg;
+};
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -102,7 +105,7 @@ export default function RegisterServiceProvider() {
     if (!validate()) return; // prevenir submit si hay errores
 
     try {
-      const res = await fetch("https://webapp-backend-tvrm.onrender.com/api/serviceprovider", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/serviceprovider`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -111,22 +114,23 @@ export default function RegisterServiceProvider() {
           companyname: formData.companyname,
           experience: parseInt(formData.experience) || 0,
           phonenumber: formData.phonenumber,
-          countrycode: formData.countrycode,
+          city: formData.city,
           address: formData.address,
           state: formData.state,
           zcode: formData.zcode,
           servicetype: formData.servicetype,
           licensed: formData.licensed,
           insuranced: formData.insuranced,
-          userid: parseInt(formData.userid) || null,
+          email:formData.email,
+          passwords:formData.passwords
         }),
       });
 
       if (res.ok) {
         Swal.fire({
           icon: "success",
-          title: "¡Éxito!",
-          text: "Proveedor de servicio registrado correctamente",
+          title: "Success!",
+          text: "Service provider registered successfully",
           timer: 2000,
           showConfirmButton: false,
           customClass: {
@@ -141,7 +145,7 @@ export default function RegisterServiceProvider() {
         Swal.fire({
           icon: "error",
           title: "Error",
-          text: errorData.message || "No se pudo registrar el proveedor",
+          text: errorData.message || "Could not register the provider",
           customClass: {
             container: "swal2-container",
             popup: "swal-top-zindex",
@@ -153,7 +157,7 @@ export default function RegisterServiceProvider() {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Error al conectar con el servidor",
+        text: "Error connecting to the server",
         customClass: {
           container: "swal2-container",
           popup: "swal-top-zindex",
@@ -164,6 +168,59 @@ export default function RegisterServiceProvider() {
     }
   };
 
+const usStates = [
+  { code: 'AL', name: 'Alabama' },
+  { code: 'AK', name: 'Alaska' },
+  { code: 'AZ', name: 'Arizona' },
+  { code: 'AR', name: 'Arkansas' },
+  { code: 'CA', name: 'California' },
+  { code: 'CO', name: 'Colorado' },
+  { code: 'CT', name: 'Connecticut' },
+  { code: 'DE', name: 'Delaware' },
+  { code: 'FL', name: 'Florida' },
+  { code: 'GA', name: 'Georgia' },
+  { code: 'HI', name: 'Hawaii' },
+  { code: 'ID', name: 'Idaho' },
+  { code: 'IL', name: 'Illinois' },
+  { code: 'IN', name: 'Indiana' },
+  { code: 'IA', name: 'Iowa' },
+  { code: 'KS', name: 'Kansas' },
+  { code: 'KY', name: 'Kentucky' },
+  { code: 'LA', name: 'Louisiana' },
+  { code: 'ME', name: 'Maine' },
+  { code: 'MD', name: 'Maryland' },
+  { code: 'MA', name: 'Massachusetts' },
+  { code: 'MI', name: 'Michigan' },
+  { code: 'MN', name: 'Minnesota' },
+  { code: 'MS', name: 'Mississippi' },
+  { code: 'MO', name: 'Missouri' },
+  { code: 'MT', name: 'Montana' },
+  { code: 'NE', name: 'Nebraska' },
+  { code: 'NV', name: 'Nevada' },
+  { code: 'NH', name: 'New Hampshire' },
+  { code: 'NJ', name: 'New Jersey' },
+  { code: 'NM', name: 'New Mexico' },
+  { code: 'NY', name: 'New York' },
+  { code: 'NC', name: 'North Carolina' },
+  { code: 'ND', name: 'North Dakota' },
+  { code: 'OH', name: 'Ohio' },
+  { code: 'OK', name: 'Oklahoma' },
+  { code: 'OR', name: 'Oregon' },
+  { code: 'PA', name: 'Pennsylvania' },
+  { code: 'RI', name: 'Rhode Island' },
+  { code: 'SC', name: 'South Carolina' },
+  { code: 'SD', name: 'South Dakota' },
+  { code: 'TN', name: 'Tennessee' },
+  { code: 'TX', name: 'Texas' },
+  { code: 'UT', name: 'Utah' },
+  { code: 'VT', name: 'Vermont' },
+  { code: 'VA', name: 'Virginia' },
+  { code: 'WA', name: 'Washington' },
+  { code: 'WV', name: 'West Virginia' },
+  { code: 'WI', name: 'Wisconsin' },
+  { code: 'WY', name: 'Wyoming' }
+];
+const serviceOptions = ['Lawn Care', 'Pool Care', 'Pest Control'];
   return (
     <>
       <Container>
@@ -194,6 +251,40 @@ export default function RegisterServiceProvider() {
               helperText={errors.lastname}
             />
           </Grid>
+           <Grid >
+      <TextField
+        name="email"
+        label="Email"
+        onChange={handleChange}
+        required
+        fullWidth
+        error={!!errors.email}
+        helperText={errors.email}
+      />
+    </Grid>
+
+     <Grid>
+      <TextField
+        name="password"
+        label="Password"
+        type={showPassword ? 'text' : 'password'}
+        onChange={handleChange}
+        required
+        fullWidth
+        
+        error={!!errors.password}
+        helperText={errors.password}
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end" sx={{ marginLeft: -3 }}>
+              <IconButton onClick={togglePasswordVisibility} edge="end">
+                {showPassword ? <VisibilityOff /> : <Visibility />}
+              </IconButton>
+            </InputAdornment>
+          )
+        }}
+      />
+    </Grid> 
           <Grid >
             <TextField
               name="companyname"
@@ -230,13 +321,14 @@ export default function RegisterServiceProvider() {
           </Grid>
           <Grid >
             <TextField
-              name="countrycode"
-              label="Country Code"
+              name="city"
+              label="City"
               onChange={handleChange}
               required
               fullWidth
-              error={!!errors.countrycode}
-              helperText={errors.countrycode}
+              error={!!errors.city}
+              helperText={errors.city}
+              
             />
           </Grid>
           <Grid >
@@ -250,17 +342,39 @@ export default function RegisterServiceProvider() {
               helperText={errors.address}
             />
           </Grid>
-          <Grid >
-            <TextField
-              name="state"
-              label="State"
-              onChange={handleChange}
-              required
-              fullWidth
-              error={!!errors.state}
-              helperText={errors.state}
-            />
-          </Grid>
+           <Grid sx={{ width: "211px" }}>
+      <Autocomplete
+        options={usStates}
+        getOptionLabel={(option) => option.name}
+        onChange={(_event, newValue) => {
+          setFormData((prev) => ({
+            ...prev,
+            state: newValue ? newValue.code : ''
+          }));
+          setErrors((prev) => ({
+            ...prev,
+            state: newValue && newValue.code ? '' : 'State is required'
+          }));
+        }}
+        value={
+          usStates.find((s) => s.code === formData.state) || null
+        }
+        
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label="State"
+            required
+            error={!!errors.state}
+            helperText={errors.state}
+            fullWidth
+               
+            
+          />
+        )}
+        isOptionEqualToValue={(option, value) => option.code === value.code}
+      />
+    </Grid>
           <Grid >
             <TextField
               name="zcode"
@@ -272,16 +386,25 @@ export default function RegisterServiceProvider() {
               helperText={errors.zcode}
             />
           </Grid>
-          <Grid >
-            <TextField
-              name="servicetype"
-              label="Service Type"
-              onChange={handleChange}
-              required
-              fullWidth
-              error={!!errors.servicetype}
-              helperText={errors.servicetype}
-            />
+          <Grid   sx={{ width: "211px" }}>
+             <TextField
+    name="servicetype"
+    label="Service Type"
+    onChange={handleChange}
+    value={formData.servicetype}
+    select
+    required
+    fullWidth
+  
+    error={!!errors.servicetype}
+    helperText={errors.servicetype}
+  >
+    {serviceOptions.map((option) => (
+      <MenuItem key={option} value={option}>
+        {option}
+      </MenuItem>
+    ))}
+  </TextField>
           </Grid>
           <Grid >
             <TextField
@@ -306,15 +429,6 @@ export default function RegisterServiceProvider() {
             />
           </Grid>
 
-          <TextField
-            name="userid"
-            label="Owner ID (optional)"
-            onChange={handleChange}
-            fullWidth
-            sx={{ maxWidth: "86%" }}
-            error={!!errors.userid}
-            helperText={errors.userid}
-          />
           
           <Grid >
             <Button
