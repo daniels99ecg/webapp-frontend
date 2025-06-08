@@ -22,7 +22,7 @@ export default function RegisterHomeowner() {
     phonenumber: "",
     password: "",
     city: "",
-    country: "",
+    country: "USA",
     address: "",
     state: "",
     zcode: "",
@@ -330,8 +330,10 @@ const serviceOptions = ['Lawn Care', 'Pool Care', 'Pest Control'];
         onChange={handleChange}
         required
         fullWidth
+        defaultValue={"USA"}
         error={!!errors.country}
         helperText={errors.country}
+        disabled
       />
     </Grid>
     <Grid >

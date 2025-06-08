@@ -15,11 +15,21 @@ import {
   Card,
   CardContent,
   Checkbox, 
-  ListItemText
+  ListItemText,
+
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
 } from "@mui/material";
 import { v4 as uuidv4 } from "uuid";
 import Navbar from "../navbar/navbar";
-
+import DoneIcon from '@mui/icons-material/Done';
+import UpdateIcon from '@mui/icons-material/Update';
 const projectOptions = ["Lawn Care", "Pool Care", "Pest Control"];
 
 export default function Home() {
@@ -33,6 +43,7 @@ export default function Home() {
     cost: "",
   });
 const user = JSON.parse(localStorage.getItem("user") || "{}");
+const [editingProject, setEditingProject] = useState<any | null>(null);
 
 useEffect(() => {
   const fetchProjects = async () => {
@@ -76,37 +87,85 @@ useEffect(() => {
     setSelectedProject([]);
     setAddToBid(null);
     setBidForm({ startDate: "", endDate: "", cost: "" });
+    setEditingProject(null);
     setShowDialog(true);
   };
 
-  const handleSaveProject = async () => {
-  const newProject = {
-    id: uuidv4(),
-    name: selectedProject,
-    addToBid,
-    ...bidForm,
-    user_id: user.user_id,
+//   const handleSaveProject = async () => {
+//       const addToBidValue = projects.length < 15 ? false : addToBid;
+// console.log("Add to bid value:", projects.length);
+//   const newProject = {
+//     id: uuidv4(),
+//     name: selectedProject,
+//     addToBid: addToBidValue,
+//     ...bidForm,
+//     user_id: user.user_id,
 
-  };
+//   };
+// console.log("Saving project:", newProject); 
+//   try {
+//     const response = await fetch(`${import.meta.env.VITE_API_URL}/api/homeowner/register`, {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify(newProject),
+//     });
+
+//     if (!response.ok) {
+//       throw new Error("Failed to save project");
+//     }
+
+//     // Opcional: puedes obtener la respuesta JSON
+//     const savedProject = await response.json();
+
+//     // Actualizas tu estado con el proyecto guardado
+//     setProjects([...projects, savedProject]);
+//     setShowDialog(false);
+//   } catch (error) {
+//     console.error("Error saving project:", error);
+//     alert("Error saving project");
+//   }
+// };
+const handleSaveProject = async () => {
+  const addToBidValue = projects.length < 15 ? false : addToBid;
+
+ const newProject = {
+  id: editingProject ? editingProject.id : uuidv4(),
+  names: selectedProject, // este es el campo correcto que usa el backend
+  add_to_bid: addToBidValue,
+  start_date: bidForm.startDate || null,
+  end_date: bidForm.endDate || null,
+  costs: bidForm.cost || null,
+  user_id: user.user_id,
+  update_data: editingProject ? true : null, // opcional: indica si es edición
+};
+
 
   try {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/homeowner/register`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+    const url = editingProject
+      ? `${import.meta.env.VITE_API_URL}/api/serviceprovider/updateall`
+      : `${import.meta.env.VITE_API_URL}/api/homeowner/register`;
+
+    const method = editingProject ? "PUT" : "POST";
+
+    const response = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newProject),
     });
 
-    if (!response.ok) {
-      throw new Error("Failed to save project");
-    }
+    if (!response.ok) throw new Error("Failed to save project");
 
-    // Opcional: puedes obtener la respuesta JSON
     const savedProject = await response.json();
 
-    // Actualizas tu estado con el proyecto guardado
-    setProjects([...projects, savedProject]);
+    if (editingProject) {
+      // Reemplaza el proyecto actualizado
+      setProjects(projects.map((p) => (p.id === savedProject.id ? savedProject : p)));
+    } else {
+      setProjects([...projects, savedProject]);
+    }
+
     setShowDialog(false);
   } catch (error) {
     console.error("Error saving project:", error);
@@ -114,7 +173,17 @@ useEffect(() => {
   }
 };
 
-
+const handleEditProject = (project: any) => {
+  setSelectedProject(Array.isArray(project.names) ? project.names : [project.name]);
+  setAddToBid(project.add_to_bid);
+  setBidForm({
+    startDate: project.start_date || "",
+    endDate: project.end_date || "",
+    cost: project.costs || "",
+  });
+  setEditingProject(project); // setea el proyecto a editar
+  setShowDialog(true);
+};
   return (
   <>
   <Navbar/>
@@ -128,9 +197,12 @@ useEffect(() => {
       px: 2,
     }}
   >
-    <Button variant="contained" color="primary" onClick={handleAddProject}>
-      New Bidding Event
-    </Button>
+    {user.userType !== "serviceprovider" && (
+  <Button variant="contained" color="primary" onClick={handleAddProject}>
+    New Bidding Event
+  </Button>
+)}
+
 
     {/* Dialog para agregar proyecto */}
     <Dialog open={showDialog} onClose={() => setShowDialog(false)} fullWidth>
@@ -157,13 +229,14 @@ useEffect(() => {
 </FormControl>
 
 
-        {addToBid === null && selectedProject && (
-          <Box>
-<Typography>Do you want to add this project to the current bid?</Typography>
-            <Button onClick={() => setAddToBid(true)}>Yes</Button>
-            <Button onClick={() => setAddToBid(false)}>No</Button>
-          </Box>
-        )}
+    {(addToBid === null && selectedProject && projects.length > 15) || editingProject ? (
+  <Box>
+    <Typography>Do you want to add this project to the current bid?</Typography>
+    <Button onClick={() => setAddToBid(true)}>Yes</Button>
+    <Button onClick={() => setAddToBid(false)}>No</Button>
+  </Box>
+) : null}
+
 
         {addToBid && (
           <>
@@ -205,8 +278,7 @@ useEffect(() => {
   <Typography variant="h5" align="center">
     Registered Projects
   </Typography>
-
-  {projects.length === 0 ? (
+{projects.length === 0 ? (
     <Typography align="center" mt={2}>
       No projects found.
     </Typography>
@@ -221,25 +293,115 @@ useEffect(() => {
           <Typography>
             <strong>Added to Bid:</strong> {p.add_to_bid ? "Yes" : "No"}
           </Typography>
-          {p.add_to_bid && (
-            <>
-              <Typography>
-                <strong>Start Date:</strong>{" "}
-                {new Date(p.start_date).toLocaleDateString("en-US")}
-              </Typography>
-              <Typography>
-                <strong>End Date:</strong>{" "}
-                {new Date(p.end_date).toLocaleDateString("en-US")}
-              </Typography>
-              <Typography>
-                <strong>Cost:</strong> ${p.costs}
-              </Typography>
-            </>
-          )}
+         {p.add_to_bid && projects.length >= 15 && (
+  <>
+    {p.update_data ? (
+      <>
+        <Typography>
+          <strong>Start Date:</strong>{" "}
+          {new Date(p.start_date).toLocaleDateString("en-US")}
+        </Typography>
+        <Typography>
+          <strong>End Date:</strong>{" "}
+          {new Date(p.end_date).toLocaleDateString("en-US")}
+        </Typography>
+        <Typography>
+          <strong>Cost:</strong> ${p.costs}
+        </Typography>
+      </>
+    ) : (
+      <>
+         <Typography>
+          <strong>Start Date:</strong>{" "}
+          {new Date(p.start_date).toLocaleDateString("en-US")}
+        </Typography>
+        <Typography>
+          <strong>End Date:</strong>{" "}
+          {new Date(p.end_date).toLocaleDateString("en-US")}
+        </Typography>
+        <Typography>
+          <strong>Cost:</strong> ${p.costs}
+        </Typography>
+      </>
+    )}
+  </>
+)}
+
+    {user.userType === "homeowner" && p.update_data &&(
+  <Box display="flex" justifyContent="flex-end" mt={2}>
+    <IconButton onClick={() => handleEditProject(p)}>
+      <UpdateIcon />
+    </IconButton>
+  </Box>
+)}
+
+
+          {user.userType == "serviceprovider"  && (
+            <Box display="flex" justifyContent="flex-end" mt={2}>
+  <IconButton
+    color="primary"
+    onClick={async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/serviceprovider/update?user_id=${p.id}`, {
+          method: 'PUT',
+        });
+        if (!response.ok) throw new Error('Error al actualizar');
+        const data = await response.json();
+        console.log('Proyecto actualizado:', data);
+        // Opcional: mostrar feedback visual
+        alert('Proyecto actualizado con éxito');
+      } catch (err) {
+        console.error(err);
+        alert('Error al actualizar el proyecto');
+      }
+    }}
+  >
+    <DoneIcon />
+  </IconButton>
+</Box>
+          )} 
+        
         </CardContent>
       </Card>
     ))
   )}
+
+
+{user.userType == "serviceprovider" && projects.length > 0 && (
+  <Box mt={4} width="100%" maxWidth="600px">
+    <Typography variant="h6" align="center" gutterBottom>
+      Service Type
+    </Typography>
+
+    <TableContainer component={Paper} elevation={3}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell align="center"><strong>Project Type</strong></TableCell>
+            <TableCell align="center"><strong>Count</strong></TableCell>
+            <TableCell align="center"><strong>Mark</strong></TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {projectOptions.map((type) => {
+            const count = projects.filter((p) =>
+              Array.isArray(p.names) ? p.names.includes(type) : p.name === type
+            ).length;
+
+            return (
+              <TableRow key={type}>
+                <TableCell align="center">{type}</TableCell>
+                <TableCell align="center">{count}</TableCell>
+                <TableCell align="center">{count > 0 ? "✓" : "✗"}</TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  </Box>
+)}
+
 </Box>
 
   </Box>
