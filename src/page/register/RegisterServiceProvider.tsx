@@ -6,7 +6,24 @@ import Swal from "sweetalert2";
 import {  Visibility, VisibilityOff } from "@mui/icons-material";
 
 export default function RegisterServiceProvider() {
-  const [formData, setFormData] = useState({
+  interface FormData {
+    firstname: string;
+    lastname: string;
+    companyname: string;
+    experience: string;
+    phonenumber: string;
+    city: string;
+    address: string;
+    state: string;
+    zcode: string;
+    servicetype: string[];
+    licensed: string;
+    insuranced: string;
+    email: string;
+    passwords: string;
+  }
+
+  const [formData, setFormData] = useState<FormData>({
     firstname: "",
     lastname: "",
     companyname: "",
@@ -16,7 +33,7 @@ export default function RegisterServiceProvider() {
     address: "",
     state: "",
     zcode: "",
-    servicetype: "",
+    servicetype: [],
     licensed: "",
     insuranced: "",
     email: "",
@@ -26,6 +43,7 @@ export default function RegisterServiceProvider() {
 const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
+const [confirmPassword, setConfirmPassword] = useState("");
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -37,6 +55,16 @@ const validateField = (name: string, value: string) => {
       break;
     case "lastname":
       if (!value.trim()) errorMsg = "Last name is required";
+      break;
+    case "email":
+      if (!value.trim()) errorMsg = "Email is required";
+      else if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(value))
+        errorMsg = "Invalid email format";
+      break;
+    case "passwords":
+      if (!value.trim()) errorMsg = "Password is required";
+      else if (value.length < 6)
+        errorMsg = "Password must be at least 6 characters";
       break;
     case "companyname":
       if (!value.trim()) errorMsg = "Company name is required";
@@ -50,21 +78,22 @@ const validateField = (name: string, value: string) => {
       if (!value.trim()) errorMsg = "Phone number is required";
       else if (value.length < 7) errorMsg = "Invalid phone number";
       break;
-    case "countrycode":
-      if (!value.trim()) errorMsg = "Country code is required";
-      break;
     case "address":
       if (!value.trim()) errorMsg = "Address is required";
+      break;
+    case "city":
+      if (!value.trim()) errorMsg = "City is required";
       break;
     case "state":
       if (!value.trim()) errorMsg = "State is required";
       break;
     case "zcode":
-      if (!value.trim()) errorMsg = "Postal code is required";
+      if (!value.trim()) errorMsg = "ZIP Code is required";
       else if (!/^\d+$/.test(value)) errorMsg = "Numbers only";
       break;
     case "servicetype":
-      if (!value.trim()) errorMsg = "Service type is required";
+      if (!Array.isArray(value) || value.length === 0)
+        errorMsg = "Service type is required";
       break;
     case "licensed":
       if (!value.trim()) errorMsg = "Please indicate if you are licensed (yes/no)";
@@ -81,6 +110,7 @@ const validateField = (name: string, value: string) => {
 };
 
 
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
@@ -91,15 +121,24 @@ const validateField = (name: string, value: string) => {
     setErrors((prev) => ({ ...prev, [name]: errorMsg }));
   };
 
-  const validate = () => {
-    const newErrors: { [key: string]: string } = {};
-    Object.entries(formData).forEach(([key, value]) => {
-      const errorMsg = validateField(key, value);
-      if (errorMsg) newErrors[key] = errorMsg;
-    });
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+ const validate = () => {
+  const newErrors: { [key: string]: string } = {};
+  Object.entries(formData).forEach(([key, value]) => {
+    const errorMsg = validateField(key, value);
+    if (errorMsg) newErrors[key] = errorMsg;
+  });
+
+  // Validación de confirmación de contraseña
+  if (!confirmPassword.trim()) {
+    newErrors.confirmPassword = "Please confirm your password";
+  } else if (formData.passwords !== confirmPassword) {
+    newErrors.confirmPassword = "Passwords do not match";
+  }
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
+
 
   const handleSubmit = async () => {
     if (!validate()) return; // prevenir submit si hay errores
@@ -265,7 +304,7 @@ const serviceOptions = ['Lawn Care', 'Pool Care', 'Pest Control'];
 
      <Grid>
       <TextField
-        name="password"
+        name="passwords"
         label="Password"
         type={showPassword ? 'text' : 'password'}
         onChange={handleChange}
@@ -285,6 +324,37 @@ const serviceOptions = ['Lawn Care', 'Pool Care', 'Pest Control'];
         }}
       />
     </Grid> 
+    <Grid>
+  <TextField
+    name="confirmPassword"
+    label="Confirm Password"
+    type={showPassword ? 'text' : 'password'}
+    value={confirmPassword}
+onChange={(e) => {
+  const value = e.target.value;
+  setConfirmPassword(value);
+  setErrors((prev) => ({
+    ...prev,
+    confirmPassword:
+      value !== formData.passwords ? "Passwords do not match" : "",
+  }));
+}}
+    required
+    fullWidth
+    error={!!errors.confirmPassword}
+    helperText={errors.confirmPassword}
+    InputProps={{
+      endAdornment: (
+        <InputAdornment position="end" sx={{ marginLeft: -3 }}>
+          <IconButton onClick={togglePasswordVisibility} edge="end">
+            {showPassword ? <VisibilityOff /> : <Visibility />}
+          </IconButton>
+        </InputAdornment>
+      )
+    }}
+  />
+</Grid>
+
           <Grid >
             <TextField
               name="companyname"
@@ -319,6 +389,17 @@ const serviceOptions = ['Lawn Care', 'Pool Care', 'Pest Control'];
               helperText={errors.phonenumber}
             />
           </Grid>
+               <Grid >
+            <TextField
+              name="address"
+              label="Address"
+              onChange={handleChange}
+              required
+              fullWidth
+              error={!!errors.address}
+              helperText={errors.address}
+            />
+          </Grid>
           <Grid >
             <TextField
               name="city"
@@ -331,17 +412,7 @@ const serviceOptions = ['Lawn Care', 'Pool Care', 'Pest Control'];
               
             />
           </Grid>
-          <Grid >
-            <TextField
-              name="address"
-              label="Address"
-              onChange={handleChange}
-              required
-              fullWidth
-              error={!!errors.address}
-              helperText={errors.address}
-            />
-          </Grid>
+     
            <Grid sx={{ width: "211px" }}>
       <Autocomplete
         options={usStates}
@@ -378,7 +449,7 @@ const serviceOptions = ['Lawn Care', 'Pool Care', 'Pest Control'];
           <Grid >
             <TextField
               name="zcode"
-              label="Postal Code"
+              label="ZIP Code"
               onChange={handleChange}
               required
               fullWidth
@@ -386,26 +457,7 @@ const serviceOptions = ['Lawn Care', 'Pool Care', 'Pest Control'];
               helperText={errors.zcode}
             />
           </Grid>
-          <Grid   sx={{ width: "211px" }}>
-             <TextField
-    name="servicetype"
-    label="Service Type"
-    onChange={handleChange}
-    value={formData.servicetype}
-    select
-    required
-    fullWidth
-  
-    error={!!errors.servicetype}
-    helperText={errors.servicetype}
-  >
-    {serviceOptions.map((option) => (
-      <MenuItem key={option} value={option}>
-        {option}
-      </MenuItem>
-    ))}
-  </TextField>
-          </Grid>
+         
           <Grid >
             <TextField
               name="licensed"
@@ -427,6 +479,35 @@ const serviceOptions = ['Lawn Care', 'Pool Care', 'Pest Control'];
               error={!!errors.insuranced}
               helperText={errors.insuranced}
             />
+          </Grid>
+
+
+           <Grid   sx={{ width: "89%" }}>
+            <Autocomplete
+  multiple
+  options={serviceOptions}
+  value={formData.servicetype}
+  onChange={(_event, newValue) => {
+    setFormData((prev) => ({
+      ...prev,
+      servicetype: newValue,
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      servicetype: newValue.length ? '' : 'Service type is required',
+    }));
+  }}
+  renderInput={(params) => (
+    <TextField
+      {...params}
+      label="Service Type"
+      required
+      error={!!errors.servicetype}
+      helperText={errors.servicetype}
+    />
+  )}
+/>
+
           </Grid>
 
           

@@ -26,6 +26,9 @@ import {
   Paper,
   IconButton,
 } from "@mui/material";
+import { DataGrid } from '@mui/x-data-grid';
+import { Tabs, Tab } from '@mui/material';
+
 import { v4 as uuidv4 } from "uuid";
 import Navbar from "../navbar/navbar";
 import DoneIcon from '@mui/icons-material/Done';
@@ -44,7 +47,27 @@ export default function Home() {
   });
 const user = JSON.parse(localStorage.getItem("user") || "{}");
 const [editingProject, setEditingProject] = useState<any | null>(null);
+type Homeowner = {
+  user_id: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  phonenumber: string;
+  servicetype: string;
+};
 
+type ServiceProvider = {
+  serviceprovider_id: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  phonenumber: string;
+  companyname: string;
+  servicetype: string;
+};
+
+const [homeowners, setHomeowners] = useState<Homeowner[]>([]);
+const [serviceproviders, setServiceproviders] = useState<ServiceProvider[]>([]);
 useEffect(() => {
   const fetchProjects = async () => {
     try {
@@ -54,6 +77,8 @@ useEffect(() => {
         url = `${import.meta.env.VITE_API_URL}/api/homeowner/list`;
       } else if (user.userType === "homeowner") {
         url = `${import.meta.env.VITE_API_URL}/api/homeowner/allhome?user_id=${user.user_id}`;
+      } else if (user.userType === "admin") {
+        url = `${import.meta.env.VITE_API_URL}/api/homeowner/all`;
       } else {
         console.error("Invalid user type");
         return;
@@ -64,23 +89,28 @@ useEffect(() => {
 
       const data = await response.json();
 
-      // Si la respuesta es un array vacío, no mostrar alerta
-      if (Array.isArray(data) && data.length === 0) {
-        console.log("No projects found");
-        setProjects([]);
-        return;
-      }
+    if (user.userType === "admin") {
+  setHomeowners(data.homeowners || []);
+  setServiceproviders(data.serviceproviders || []);
+} else {
+        // Si la respuesta es un array vacío, no mostrar alerta
+        if (Array.isArray(data) && data.length === 0) {
+          console.log("No projects found");
+          setProjects([]);
+          return;
+        }
 
-      setProjects(data);
+        setProjects(data);
+      }
     } catch (error) {
       console.error("Error fetching projects:", error);
-      // Aquí solo mostramos alerta si es un error real (no solo una lista vacía)
       alert("Error loading projects");
     }
   };
 
   fetchProjects();
 }, []);
+
 
 
   const handleAddProject = () => {
@@ -184,10 +214,97 @@ const handleEditProject = (project: any) => {
   setEditingProject(project); // setea el proyecto a editar
   setShowDialog(true);
 };
+
+
+const homeownerColumns = [
+  { field: 'firstname', headerName: 'First Name', flex: 1 },
+  { field: 'lastname', headerName: 'Last Name', flex: 1 },
+  { field: 'email', headerName: 'Email', flex: 1 },
+  { field: 'phonenumber', headerName: 'Phone', flex: 1 },
+   { field: 'address', headerName: 'Address', flex: 1},
+    { field: 'zcode', headerName: 'ZIP Code', flex: 1 },
+];
+
+const serviceProviderColumns = [
+  { field: 'firstname', headerName: 'First Name', flex: 1 },
+  { field: 'lastname', headerName: 'Last Name', flex: 1 },
+  { field: 'email', headerName: 'Email', flex: 1 },
+  { field: 'phonenumber', headerName: 'Phone', flex: 1 },
+  { field: 'companyname', headerName: 'Company', flex: 1 },
+];
+const [selectedTab, setSelectedTab] = useState(0);
+const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+  setSelectedTab(newValue);
+};
+
+
   return (
   <>
   <Navbar/>
-  <Box
+   <Box
+  sx={{
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: "88vh",
+    px: 2,
+  }}
+>
+  {user.userType === 'admin' ? (
+    <>
+      <Tabs
+        value={selectedTab}
+        onChange={handleTabChange}
+        textColor="primary"
+        indicatorColor="primary"
+        centered
+      >
+        <Tab label="Homeowners" />
+        <Tab label="Service Providers" />
+      </Tabs>
+
+      <Box mt={3} width="100%">
+        {selectedTab === 0 && (
+          <>
+            <Typography variant="h6" gutterBottom>Homeowners</Typography>
+            <div style={{ height: 500, width: '100%' }}>
+              <DataGrid
+                rows={homeowners}
+                columns={homeownerColumns}
+                getRowId={(row) => row.user_id}
+                pageSizeOptions={[5, 10, 25]}
+                initialState={{
+                  pagination: { paginationModel: { pageSize: 5, page: 0 } },
+                }}
+              />
+            </div>
+          </>
+        )}
+        {selectedTab === 1 && (
+          <>
+            <Typography variant="h6" gutterBottom>Service Providers</Typography>
+            <div style={{ height: 500, width: '100%' }}>
+              <DataGrid
+                rows={serviceproviders}
+                columns={serviceProviderColumns}
+                getRowId={(row) => row.serviceprovider_id}
+                pageSizeOptions={[5, 10, 25]}
+                initialState={{
+                  pagination: { paginationModel: { pageSize: 5, page: 0 } },
+                }}
+              />
+            </div>
+          </>
+        )}
+      </Box>
+    </>
+  ) : (
+    <DialogTitle>Your registration process has been completed ¡¡¡Thank you !!!</DialogTitle>
+  )}
+</Box>
+
+  {/* <Box
     sx={{
       display: "flex",
       flexDirection: "column",
@@ -204,7 +321,7 @@ const handleEditProject = (project: any) => {
 )}
 
 
-    {/* Dialog para agregar proyecto */}
+    
     <Dialog open={showDialog} onClose={() => setShowDialog(false)} fullWidth>
       <DialogTitle>Add Project</DialogTitle>
 
@@ -404,7 +521,7 @@ const handleEditProject = (project: any) => {
 
 </Box>
 
-  </Box>
+  </Box> */}
 </>
 
   );

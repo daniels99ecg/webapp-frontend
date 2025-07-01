@@ -26,13 +26,15 @@ export default function RegisterHomeowner() {
     address: "",
     state: "",
     zcode: "",
-    servicetype: "",
+    servicetype: [] as string[],
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [showPassword, setShowPassword] = useState(false);
 const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
+const [confirmPassword, setConfirmPassword] = useState("");
+const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -75,11 +77,11 @@ const togglePasswordVisibility = () => {
     if (!value.trim()) errorMsg = "State is required";
     break;
   case "zcode":
-    if (!value.trim()) errorMsg = "Postal code is required";
+    if (!value.trim()) errorMsg = " ZIP Code is required";
     else if (!/^\d+$/.test(value)) errorMsg = "Numbers only";
     break;
   case "servicetype":
-    if (!value.trim()) errorMsg = "Service type is required";
+    // No validation here, handled in Autocomplete onChange
     break;
 }
 
@@ -106,6 +108,8 @@ const togglePasswordVisibility = () => {
   if (!formData.password.trim()) newErrors.password = "Password is required";
   else if (formData.password.length < 6)
     newErrors.password = "Minimum 6 characters";
+if (confirmPassword !== formData.password)
+    newErrors.confirmPassword = "Passwords do not match";
 
   if (!formData.city.trim())
     newErrors.countrycode = "Country code is required";
@@ -113,10 +117,10 @@ const togglePasswordVisibility = () => {
   if (!formData.address.trim()) newErrors.address = "Address is required";
   if (!formData.state.trim()) newErrors.state = "State is required";
 
-  if (!formData.zcode.trim()) newErrors.zcode = "Postal code is required";
+  if (!formData.zcode.trim()) newErrors.zcode = " ZIP Code is required";
   else if (!/^\d+$/.test(formData.zcode)) newErrors.zcode = "Numbers only";
 
-  if (!formData.servicetype.trim())
+  if (!formData.servicetype || formData.servicetype.length === 0)
     newErrors.servicetype = "Service type is required";
 
   setErrors(newErrors);
@@ -137,7 +141,7 @@ const togglePasswordVisibility = () => {
         Swal.fire({
           icon: "success",
            title: "Success!",
-          text: "Service provider registered successfully",
+          text: "Homeowner registered successfully",
           timer: 2000,
           showConfirmButton: false,
           customClass: {
@@ -308,6 +312,48 @@ const serviceOptions = ['Lawn Care', 'Pool Care', 'Pest Control'];
         }}
       />
     </Grid>
+    <Grid>
+  <TextField
+    name="confirmPassword"
+    label="Confirm Password"
+    type={showPassword ? 'text' : 'password'}
+    value={confirmPassword}
+    onChange={(e) => {
+      setConfirmPassword(e.target.value);
+      if (e.target.value !== formData.password) {
+        setConfirmPasswordError("Passwords do not match");
+      } else {
+        setConfirmPasswordError("");
+      }
+    }}
+    required
+    fullWidth
+    error={!!confirmPasswordError}
+    helperText={confirmPasswordError}
+    InputProps={{
+      endAdornment: (
+        <InputAdornment position="end" sx={{ marginLeft: -3 }}>
+          <IconButton onClick={togglePasswordVisibility} edge="end">
+            {showPassword ? <VisibilityOff /> : <Visibility />}
+          </IconButton>
+        </InputAdornment>
+      ),
+    }}
+  />
+</Grid>
+
+
+      <Grid >
+      <TextField
+        name="address"
+        label="Address"
+        onChange={handleChange}
+        required
+        fullWidth
+        error={!!errors.address}
+        helperText={errors.address}
+      />
+    </Grid>
     <Grid >
       <TextField
         name="city"
@@ -321,35 +367,7 @@ const serviceOptions = ['Lawn Care', 'Pool Care', 'Pest Control'];
         helperText={errors.city}
       />
     </Grid>
-
-    {/* Fourth row fields (two columns) */}
-    <Grid >
-      <TextField
-        name="country"
-        label="Country"
-        onChange={handleChange}
-        required
-        fullWidth
-        defaultValue={"USA"}
-        error={!!errors.country}
-        helperText={errors.country}
-        disabled
-      />
-    </Grid>
-    <Grid >
-      <TextField
-        name="address"
-        label="Address"
-        onChange={handleChange}
-        required
-        fullWidth
-        error={!!errors.address}
-        helperText={errors.address}
-      />
-    </Grid>
-
-    {/* Fifth row fields (two columns) */}
- <Grid sx={{ width: "211px" }}>
+<Grid sx={{ width: "211px" }}>
       <Autocomplete
         options={usStates}
         getOptionLabel={(option) => option.name}
@@ -382,10 +400,13 @@ const serviceOptions = ['Lawn Care', 'Pool Care', 'Pest Control'];
         isOptionEqualToValue={(option, value) => option.code === value.code}
       />
     </Grid>
+
+       {/* Fifth row fields (two columns) */}
+ 
     <Grid >
       <TextField
         name="zcode"
-        label="Postal Code"
+        label="ZIP Code"
         onChange={handleChange}
         required
         fullWidth
@@ -394,25 +415,54 @@ const serviceOptions = ['Lawn Care', 'Pool Care', 'Pest Control'];
       />
     </Grid>
 
-    {/* 'servicetype' field full width */}
-    <TextField
-    name="servicetype"
-    label="Service Type"
-    onChange={handleChange}
+
+    {/* Fourth row fields (two columns) */}
+    <Grid >
+      <TextField
+        name="country"
+        label="Country"
+        onChange={handleChange}
+        required
+        fullWidth
+        defaultValue={"USA"}
+        error={!!errors.country}
+        helperText={errors.country}
+        disabled
+      />
+    </Grid>
+  
+<Grid style={{width: '42%'}}>
+  <Autocomplete
+    multiple
+    options={serviceOptions}
     value={formData.servicetype}
-    select
-    required
-    fullWidth
-    sx={{ maxWidth: "86%" }}
-    error={!!errors.servicetype}
-    helperText={errors.servicetype}
-  >
-    {serviceOptions.map((option) => (
-      <MenuItem key={option} value={option}>
-        {option}
-      </MenuItem>
-    ))}
-  </TextField>
+    onChange={(_event, newValue) => {
+      setFormData((prev) => ({
+        ...prev,
+        servicetype: newValue as string[],
+      }));
+      setErrors((prev) => ({
+        ...prev,
+        servicetype: newValue.length ? '' : 'Service type is required',
+      }));
+    }}
+    renderInput={(params) => (
+      <TextField
+        {...params}
+        name="servicetype"
+        label="Service Type"
+        required
+        fullWidth
+        error={!!errors.servicetype}
+        helperText={errors.servicetype}
+      />
+    )}
+  />
+
+</Grid>
+   
+ 
+
     {/* Submit button row */}
     <Grid>
       <Stack direction="row" justifyContent="center">
