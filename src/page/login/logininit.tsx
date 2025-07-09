@@ -95,7 +95,7 @@ export default function LoginInit() {
 
         <FormControl fullWidth error={!!errors.password}>
           <TextField
-            label="Contraseña"
+            label="Password"
             name="password"
             type="password"
             value={credentials.password}
@@ -106,7 +106,7 @@ export default function LoginInit() {
         </FormControl>
 
         <Button variant="contained" onClick={handleSubmit}>
-          Iniciar sesión
+          Sign In
         </Button>
       </Stack>
     </Container>
